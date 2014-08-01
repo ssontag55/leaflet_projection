@@ -1,0 +1,205 @@
+<html>
+<head>
+  <meta charset=utf-8 />
+  <title></title>
+  <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+
+
+  <!-- Load Esri and  Leafletlibs -->
+  <link rel="stylesheet" href="leaflet.css" />
+  <script src="lib/leaflet.js"></script>
+  <script src="lib/esri-leaflet.js"></script>
+  <script src="lib/proj4.js"></script>
+  <script src="lib/proj4leaflet.js"></script>
+  <script src="lib/jsonConverters.js" type="text/javascript"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+
+  <style>
+    body {margin:0;padding:0;background-color: rgba(138, 120, 98, 0.25)}
+    #bathymapNTHMP {position: relative;height:400px; box-shadow: 0 8px 16px -8px #222;
+        -moz-box-sizing: border-box;
+        -webkit-box-sizing: border-box;
+        box-sizing: border-box; margin-top: 18px;
+        border: 1px solid #E5E5E5;
+        border-radius: 6px;}
+    #bathymapMN {position: relative;height:400px; box-shadow: 0 8px 16px -8px #222;
+        -moz-box-sizing: border-box;
+        -webkit-box-sizing: border-box; margin-top: 18px;
+        box-sizing: border-box;
+        border: 1px solid #E5E5E5;
+        border-radius: 6px;}
+    #bathymapGOM {position: relative;height:400px; box-shadow: 0 8px 16px -8px #222;
+        -moz-box-sizing: border-box;
+        -webkit-box-sizing: border-box; margin-top: 18px;
+        box-sizing: border-box;
+        border: 1px solid #E5E5E5;
+        border-radius: 6px;}
+    #multibeammap {position: relative;float: left;height:400px;width:50%; box-shadow: 0 8px 16px -8px #222;
+        -moz-box-sizing: border-box;
+        -webkit-box-sizing: border-box; margin-top: 18px;
+        box-sizing: border-box;
+        border: 1px solid #E5E5E5;
+        border-radius: 6px;}
+  </style>
+</head>
+<body>
+
+<div style="position:absolute;top:0;right:150;left:150;">
+  Montauk (NTHMP)<div id="bathymapNTHMP"></div>
+  Montauk to Nantucket<div id="bathymapMN"></div>
+  Gulf of Maine<div id="bathymapGOM"></div>
+  <div>
+    <div id="multibeammap"><img class="landinggrid" src="images/area.png" style="z-index:10;position: absolute;padding-top: 65;padding-left: 13; cursor:pointer;" onclick="map4.setView([42.261, -70.80],7)" title="Full Zoom" ></div>
+    <div class="row" style="position:relative;float: right;">
+          <div id="data" class="span6 pull-left">
+              <div class="overview" >
+                  <p>
+                      <div class="bs-docs-example" style="height:400px;width: 410; overflow: auto">
+            <table id="dataTable" style="cursor:pointer; font-size:11px" class="table table-hover">
+              <thead style="cursor:default; background-color: rgb(233, 233, 233);">
+                  <tr>
+                      <th>PLACENAME</th>
+                      <th>STATE</th>
+                      <th>DATE</th>
+                      <th>RESOLUTION</th>
+                      <th>UTM</th>
+                  </tr>
+                </thead>
+            </table>
+          </div>
+                <p></p>
+          </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // create new Proj4Leaflet CRS
+  // This is because the map cache is a custom projection
+  var crs = new L.Proj.CRS('EPSG:26912', '+proj=utm +zone=19 +ellps=GRS80 +datum=NAD83 +units=m +no_defs', {
+    transformation: new L.Transformation(1, 5120900, -1, 9998100),
+    resolutions: [
+      158.75031750063502,
+      105.83354500042334,
+      58.20844975023284,
+      21.16670900008467,
+      10.583354500042335,
+      5.291677250021167
+    ]
+  });
+
+  //var transformation = new L.Transformation(1, -bbox[0], -1, bbox[3]);
+  //gulf of maine
+  var crsGOM = new L.Proj.CRS('EPSG:4269', '+proj=longlat +ellps=GRS80 +datum=NAD83 +units=degrees', {
+    transformation: new L.Transformation(1, 71.77074873096085, -1, 47.33007614212728),
+    origin: [-400.0,399.9999999999998],
+    resolutions: [
+      0.01903568804664224,
+      0.00951784402332112,
+      0.00475892201166056,
+      0.00237946100583028,
+      0.00118973050291514,
+      0.00059486525145757
+    ]
+  });
+
+  var map1 = new L.Map('bathymapNTHMP', {
+    //crs: crswgs,
+  }).setView([41.131090, -72.007141], 11);
+  L.esri.tiledMapLayer('http://gis.asascience.com/arcgis/rest/services/RegionalPortal/Montauk_cache/MapServer', {
+    maxZoom: 16,
+    minZoom: 10,
+    attribution: 'NEOD'
+  }).addTo(map1);
+
+  var map2 = new L.Map('bathymapMN', {
+    crs: crs
+  }).setView([41.561, -70.80], 0);
+  L.esri.tiledMapLayer('http://50.19.218.171/arcgis1/rest/services/Bathymetry/MontaukToNantucketShoalsBathymetry/MapServer', {
+    maxZoom: 5,
+    minZoom: 0,
+    continuousWorld: true,
+    attribution: 'NEOD'
+  }).addTo(map2);
+  
+ var map3 = new L.Map('bathymapGOM', {
+    crs: crsGOM
+  }).setView([44.480830, -66.25], 2);
+  L.esri.tiledMapLayer('http://gis.asascience.com/arcgis/rest/services/RegionalPortal/USGS_GOM_3_arc_second/MapServer', {
+    maxZoom: 5,
+    minZoom: 0,
+    continuousWorld: true,
+    attribution: 'NEOD'
+  }).addTo(map3);
+
+
+//This is for the selectable map
+  var map4 = new L.Map('multibeammap').setView([42.261, -70.80],7);
+  map4.addLayer(L.esri.basemapLayer('Gray'));
+  map4.addLayer(L.esri.dynamicMapLayer('http://gis.asascience.com/arcgis/rest/services/RegionalPortal/BAG_Extents/MapServer',{layers:[0],position:"back"}));
+
+  var layerList = [];
+  $.getJSON(
+      'http://gis.asascience.com/arcgis/rest/services/RegionalPortal/BAG_Extents/MapServer/0/query?f=json&outfields=*&returnGeometry=true&text=%%',
+      function(data) {
+        jsonParser(data);
+      }
+    );
+
+//to convert esri features to geojson
+  var jsonconverter = esriConverter();
+  function jsonParser(json) 
+  {
+    $.each(json.features, function(index, element)
+    {
+        var layerTag = [];
+        layerTag['Place'] = element.attributes.PlaceName;
+        layerTag['Date'] = element.attributes.Date;
+        layerTag['geom'] = jsonconverter.toGeoJson(element);
+        layerTag['UTM'] = element.attributes.UTM;
+        layerTag['STATE'] = element.attributes.State; 
+        layerTag['RESOLUTION'] = element.attributes.Resolution_M;
+        layerList.push(layerTag);
+
+        $("#dataTable").append("<tr onmouseover='showGeom("+index+")' onclick='zoomGeom("+index+")' ><th>"+layerTag['Place']+"</th><th>"+layerTag['STATE']
+            + "</th><th>"+ layerTag['Date']+"</th><th>"+layerTag['RESOLUTION']+"</th><th>"+layerTag['UTM']+"</th></tr>");
+    }); 
+  }
+
+  var hoverStyle = {
+      "color": "#2EA8E6",
+      "weight": 1,
+      "fillOpacity": 0.7
+  };
+  var hoverPolygon;
+  function showGeom(layerN){
+      if(hoverPolygon != undefined){
+          map4.removeLayer(hoverPolygon);
+      }
+
+      var geomLayer = layerList[layerN]['geom'];
+      
+      hoverPolygon = L.geoJson(geomLayer,{style:hoverStyle}).bindPopup(layerList[layerN]['Place']);
+      hoverPolygon.addTo(map4);
+  };
+
+  var zoomStyle = {
+      "color": "#E66C2E",
+      "weight": 1,
+      "fillOpacity": 0.7
+  };
+  var zoomPolygon;
+  function zoomGeom(layerN){
+      if(zoomPolygon != undefined){
+          map4.removeLayer(zoomPolygon);
+      }
+      
+      var geomLayer = layerList[layerN]['geom'];
+      
+      zoomPolygon = L.geoJson(geomLayer,{style:zoomStyle}).bindPopup(layerList[layerN]['Place']);
+      zoomPolygon.addTo(map4);
+      map4.fitBounds(zoomPolygon.getBounds());
+  };
+</script>
+</body>
+</html>
